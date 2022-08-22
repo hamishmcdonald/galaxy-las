@@ -8,6 +8,12 @@ import astropy
 import traceback
 import timeline
 
+#constants and their units
+WEIN_CONSTANT = 2897771.9 #nM K
+BOLTZMANN_CONSTANT = 1.380649e-23 #J/(K)
+PLANCK_CONSTANT = 6.62607015e-34 #J s
+LIGHT_SPEED_CONSTANT = 29979245800 #cm/(s)
+
 def main():
     #local file location of GaiaSource files
     # the files can be found for download here:
@@ -42,7 +48,7 @@ def main():
                    # sec_dm_main_source_catalogue/ssec_dm_gaia_source.html
                     current_csv_reader = csv.DictReader(current_csv)
 
-                    row_number = 0
+                    row_number = 1
 
                     #interate through each star in the current GaiaSource file
                     for row in current_csv_reader:
@@ -52,35 +58,35 @@ def main():
                             #calculate x, y, z coordinates of the star using parallax, galactic longitude and latitude
                             # more information on the formulas can be found here:
                             #https://en.wikipedia.org/wiki/Galactic_coordinate_system
-                            x_value = math.cos(float(row['b'])) * math.cos(float(row['l'])) / float(row['parallax'])
-                            y_value = math.cos(float(row['b'])) * math.sin(float(row['l'])) / float(row['parallax'])
-                            z_value = math.sin(float(row['b'])) / float(row['parallax'])
-
+                            if row['parallax'] == '':
+                                raise Exception("no parallax")
+                            else:
+                                x_value = math.cos(float(row['b'])) * math.cos(float(row['l'])) / float(row['parallax'])
+                                y_value = math.cos(float(row['b'])) * math.sin(float(row['l'])) / float(row['parallax'])
+                                z_value = math.sin(float(row['b'])) / float(row['parallax'])
+                                
                             #calculate peak wavelength of light emitted from the star
                             if not row['nu_eff_used_in_astrometry'] == '':
                                 peak_wavelength_value = 1 / float(row['nu_eff_used_in_astrometry']) * 1000
-                                nu_eff_used_in_astronomy_value = float(row['nu_eff_used_in_astrometry'])
-                                pseudocolour_value = None
                             elif not row['pseudocolour'] == '':
                                 peak_wavelength_value = 1 / float(row['pseudocolour']) * 1000
-                                nu_eff_used_in_astronomy_value = None
-                                pseudocolour_value = float(row['pseudocolour'])
                             else:
                                 raise Exception("no nu_eff_used_in_astronomy or pseudocolour")
                          
                             #calculate temperature of the star with Wien's law formula using displacement constant and peak 
                             # wavelength
-                            temperature = 2.8977719 / peak_wavelength_value
+                            #https://www.omnicalculator.com/physics/wiens-law
+                            temperature = WEIN_CONSTANT / peak_wavelength_value
+
+                            print(temperature)
                             
-                            #calculate rgb values of using temperature
+                            #calculate rgb values of star using temperature
                             #red_value, green_value, blue_value = timeline.rgb_from_T(temperature, False, 255, False)
+                            #https://en.wikipedia.org/wiki/CIE_1931_color_space
                             if 675 < temperature < 250000:
                                 red_value, green_value, blue_value = calculate_rgb(temperature)
-                                print("red: " + str(red_value))
-                                print("green: " + str(green_value))
-                                print("blue: " + str(blue_value))
                             else:
-                                raise Exception("temperature outside of normal range")
+                                raise Exception("temperature outside of normal range: " + str(temperature))
                             
 
                             #store unique source indentifiers and designations
@@ -88,7 +94,8 @@ def main():
                             designation_value = int(row['designation'][11:])
                             source_id_value = int(row['source_id'])
 
-                            #add values to associated array, done separately incase calculations produce an exception
+                            #add values to associated temporary array, done separately incase calculations produce an 
+                            # exception
                             x.append(x_value)
                             y.append(y_value)
                             z.append(z_value)
@@ -104,8 +111,10 @@ def main():
 
                         #print to console if an exception occured for the star
                         except Exception as row_exception:
-                            print("Exception occured in row " + str(row_number) + " in file " + gaia_file + ": ", row_exception)
+                            print("Exception occured in row " + str(row_number) + " in file " + gaia_file + ": ", 
+                                row_exception)
                             traceback.print_exc()
+                            print("\n")
 
                 #add temporary arrays to the las file
                 galaxy_data.x = x
@@ -130,12 +139,17 @@ def main():
                 traceback.print_exc()
 
 def calculate_rgb(temperature):
+    #wavelength in cm
+    wavelength_cm = numpy.linspace(3.5e-5, 8e-5, 1e-5)
     #wavelength in nm
-    lam = numpy.linspace(350, 800, 100) * astropy.nm
+    lam = numpy.linspace(350, 800, 100)
     #spectral radiance of a blackbody in cgs units
-    B = (2 * astropy.h * astropy.c ** 2 / lam ** 5 / (numpy.exp(astropy.h * astropy.c / lam / astropy.k_B / (temperature * astropy.K)) - 1)).cgs.value
+    x = PLANCK_CONSTANT * LIGHT_SPEED_CONSTANT / wavelength_cm / BOLTZMANN_CONSTANT / (temperature)
+    B = (2 * PLANCK_CONSTANT * LIGHT_SPEED_CONSTANT ** 2 / wavelength_cm ** 5 / (numpy.exp(x) - 1))
+
     #Color matching functions
     lamcie,xbar,ybar,zbar = cie()
+    
     #Interpolate to same axis
     B = numpy.interp(lamcie, lam, B)                 
 
@@ -166,7 +180,7 @@ def calculate_rgb(temperature):
         if color <= 0.0031308:
             RGB[i] = 12.92 * color
         else:
-            RGB[i] = (1+0.055) * color**(1/2.4) - 0.055
+            RGB[i] = (1 + 0.055) * color ** (1 / 2.4) - 0.055
 
     # RGB = RGB / np.array([0.9505, 1., 1.0890])  #Scale so that Y of "white" (D65) is (0.9505, 1.0000, 1.0890)
     maxRGB = max(RGB.flatten())
@@ -177,7 +191,7 @@ def calculate_rgb(temperature):
 
     #Normalize to number of colors
     RGB = 255 * RGB                               
-    return 255 * RGB
+    return RGB
 
 def cie():
     """

@@ -17,9 +17,9 @@ PLANCK_CONSTANT = 6.62607015e-34 #J s
 LIGHT_SPEED_CONSTANT = 29979245800 #cm/(s)
 
 #matrix of polynomial co-efficients for temperature to rgb conversion
-POLYNOMIAL_COEFFICIENTS=[[202.7407364067034, -26.810279254200008, 17.92772958298324, - 9.45648666312952, 1.6236384714807253],
-[218.60561513620232, 52.17192901392309, -23.061733295188585, 54.04865637275284, -51.058826067299464],
-[216.63554612112824, -19.0450479334475, 9.609252176140112, -6.312170402591599, 3.146919073190075],
+POLYNOMIAL_COEFFICIENTS = [[202.7407364067034, -26.810279254200008, 17.92772958298324, - 9.45648666312952, 1.6236384714807253], 
+[218.60561513620232, 52.17192901392309, -23.061733295188585, 54.04865637275284, -51.058826067299464], 
+[216.63554612112824, -19.0450479334475, 9.609252176140112, -6.312170402591599, 3.146919073190075], 
 [177.94711834639443, 110.39882919514417, -34.69680828555997, 13.575839801777828, -12.414595228016992]]
 
 def main():
@@ -62,11 +62,6 @@ def main():
                             #calculate cartesian coordinates and rgb colorisation of star (row)
                             x_value, y_value, z_value = calculateCartesian(row)
                             red_value, green_value, blue_value = calculateRGB(calculateTemperature(row))
-                
-                            if largest_temperature < calculateTemperature(row):
-        
-                                largest_temperature = calculateTemperature(row)
-                                print(calculateTemperature(row))
 
                             #store unique source indentifiers and designations of star (row)
                             solution_id_value = int(row['solution_id'])
@@ -149,35 +144,50 @@ def calculateTemperature(row):
 #https://en.wikipedia.org/wiki/CIE_1931_color_space
 # polynomial equations approximating data collected from timeline.py using getRGB.py
 def calculateRGB(t):
-    if 675 <= t <= 15000:
+    if 0 <= t <= 15000:
 
-        if 675 <= t <= 5705:
+        #calculate red value
+        if t <= 5705:
             red_value = 255
-        elif 5705 < t <= 15000:
+        elif 5705 < t:
             red_value = calculatePolynomial(t, 0)
 
-        if 675 <= t < 5710:
+        #calcluate green value
+        if t <= 665:
+            green_value = 0
+        elif 665 < t <= 5705:
             green_value = calculatePolynomial(t, 1)
-        elif 5710 <= t <= 6145:
+        elif 5705 < t <= 6145:
             green_value = 255
-        elif 6145 < t <= 15000:
+        elif 6145 < t:
             green_value = calculatePolynomial(t, 2)
 
-        if 675 <= t <= 1395:
+        #calculate blue value
+        if t <= 1395:
             blue_value = 0
-        elif 1395 < t < 6150:
+        elif 1395 < t <= 6145:
             blue_value = calculatePolynomial(t, 3)
-        elif 6150 <= t <= 15000:
+        elif 6145 < t:
             blue_value = 255
+
     else:
         raise Exception("temperature outside of normal range: " + str(t))
 
-    return red_value, green_value, blue_value
+    rgb_value = red_value, green_value, blue_value
+
+    #normalise rgb value
+    for value in rgb_value:
+        if value > 255:
+            value = 255
+        if value < 0:
+            value = 0
+    
+    return rgb_value
 
 #calculate polynomial
 def calculatePolynomial(t, polynomial):
     colour_value = 0
-    for i, coefficient in POLYNOMIAL_COEFFICIENTS[polynomial]:
+    for i, coefficient in enumerate(POLYNOMIAL_COEFFICIENTS[polynomial]):
         colour_value += coefficient * t ** i
 
     return colour_value

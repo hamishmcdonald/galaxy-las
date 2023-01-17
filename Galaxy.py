@@ -102,14 +102,14 @@ def main():
                 galaxy_data.source_id = source_id
 
                 #write las file to local storage
-                galaxy_data.write(gaia_file + ".las")
+                galaxy_data.write(gaia_file + '.las')
 
                 #print to console if no exceptions occured for the GaiaSource file 
                 print(gaia_file + " was successfully converted")
 
             #print to console if an exception occured for the GaiaSource file
             except Exception as file_exception:
-                print("Exception occured in file " + gaia_file + ": ", file_exception)
+                print(gaia_file + ": ", file_exception)
                 traceback.print_exc()
 
 #calculate x, y, z coordinates of the star using parallax, galactic longitude and latitude

@@ -6,7 +6,7 @@ class TestGalaxy(unittest.TestCase):
         self.assertEqual()
     
     def test_calculateRGB(self):
-        
+        self.assertEqual()
 
 
 

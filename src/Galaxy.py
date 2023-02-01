@@ -15,7 +15,7 @@ BOLTZMANN_CONSTANT = 1.380649e-23 #J/(K)
 PLANCK_CONSTANT = 6.62607015e-34 #J s
 LIGHT_SPEED_CONSTANT = 29979245800 #cm/(s)
 
-#matrix of polynomial co-efficients for temperature to rgb conversion
+#matrix of polynomial co-efficients for temperature to rgb conversion in ascending order of degree
 POLYNOMIAL_COEFFICIENTS = [
     [202.7407364067034, -26.810279254200008, 17.92772958298324, -9.45648666312952, 1.6236384714807253], 
     [218.60561513620232, 52.17192901392309, -23.061733295188585, 54.04865637275284, -51.058826067299464], 
@@ -52,20 +52,16 @@ def main():
                    #sec_dm_main_source_catalogue/ssec_dm_gaia_source.html
                     current_csv_reader = csv.DictReader(current_csv)
 
-                    row_number = 1
-                    largest_temperature = 0
-
                     #iterate through each star in the current GaiaSource file
-                    for row in current_csv_reader:
+                    for i, row in enumerate(current_csv_reader, start = 1):
                         try:
-                            row_number += 1
 
-                            #calculate cartesian coordinates and rgb colorisation of star (row)
+                            #calculate cartesian coordinates and rgb colorisation of star(row)
                             x_value, y_value, z_value = calculateCartesian(row)
                             #red_value, green_value, blue_value = calculateRGB(calculateTemperature(row))
                             red_value, green_value, blue_value = retrieveRGB(calculateTemperature(row))
 
-                            #store unique source indentifiers and designations of star (row)
+                            #store unique source indentifiers and designations of star(row)
                             solution_id_value = int(row['solution_id'])
                             designation_value = int(row['designation'][11:])
                             source_id_value = int(row['source_id'])
@@ -83,12 +79,11 @@ def main():
                             source_id.append(source_id_value)
                             
                             #print to console if no exceptions occured for the star
-                            print("data in row " + str(row_number) + " successfully added")
+                            print("data in row " + str(i) + " successfully added")
 
                         #print to console if an exception occured for the star
                         except Exception as row_exception:
-                            print("Exception occured in row " + str(row_number) + " in file " + gaia_file + ": ", 
-                                row_exception)
+                            print("Exception occured in row " + str(i) + " in file " + gaia_file + ": ", row_exception)
                             traceback.print_exc()
                             print("\n")
                             #pass
@@ -145,7 +140,6 @@ def calculateTemperature(row):
 
 #calculate rgb values of star using temperature
 #https://en.wikipedia.org/wiki/CIE_1931_color_space
-# polynomial equations approximating data collected from timeline.py using getRGB.py
 def calculateRGB(t):
     if 0 <= t <= 15000:
 
@@ -153,23 +147,23 @@ def calculateRGB(t):
         if t <= 5705:
             red_value = 255
         elif 5705 < t:
-            red_value = calculatePolynomial(t, 0)
+            red_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[0])
 
         #calcluate green value
         if t <= 665:
             green_value = 0
         elif 665 < t <= 5705:
-            green_value = calculatePolynomial(t, 1)
+            green_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[1])
         elif 5705 < t <= 6145:
             green_value = 255
         elif 6145 < t:
-            green_value = calculatePolynomial(t, 2)
+            green_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[2])
 
         #calculate blue value
         if t <= 1395:
             blue_value = 0
         elif 1395 < t <= 6145:
-            blue_value = calculatePolynomial(t, 3)
+            blue_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[3])
         elif 6145 < t:
             blue_value = 255
 
@@ -188,15 +182,18 @@ def calculateRGB(t):
     
     return rgb_value
 
-#calculate polynomial
-def calculatePolynomial(t, polynomial):
+#calculate a polynomial using variable t
+def calculatePolynomial(t, coefficients):
     colour_value = 0
-    for i, coefficient in enumerate(POLYNOMIAL_COEFFICIENTS[polynomial]):
+    for i, coefficient in enumerate(coefficients):
         colour_value += coefficient * t ** i
 
     return colour_value
 
+#retrive rgb values of star using temperature
+#https://en.wikipedia.org/wiki/CIE_1931_color_space
 def retrieveRGB(t):
+
     #round temperature to the nearest 100
     t = round(t / 100) * 100
 

@@ -1,4 +1,4 @@
-#Python script for a 3D model of the milky way galaxy, plotting and colourising 1.7 billion stars with data collected from the Gaia space observatory
+#Python script to build a 3D model of the milky way galaxy, plotting and colourising 1.7 billion stars with data collected from the Gaia space observatory
 
 Download the las files for the model here: 
 

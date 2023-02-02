@@ -31,7 +31,7 @@ def main():
                 with open(file_directory + '/' + gaia_file) as current_csv:
                     
                     #create las header then create las file using header
-                    header = laspy.LasHeader(version="1.4", point_format=2)
+                    header = laspy.LasHeader(version = "1.4", point_format = 2)
                     galaxy_data = laspy.LasData(header)
 
                     #create extra dimensions in las file for storing meta data
@@ -57,9 +57,9 @@ def main():
                         try:
 
                             #calculate cartesian coordinates and rgb colorisation of star(row)
-                            x_value, y_value, z_value = calculateCartesian(row)
-                            #red_value, green_value, blue_value = calculateRGB(calculateTemperature(row))
-                            red_value, green_value, blue_value = retrieveRGB(calculateTemperature(row))
+                            x_value, y_value, z_value = calculate_cartesian(row)
+                            #red_value, green_value, blue_value = calculate_rgb(calculate_temperature(row))
+                            red_value, green_value, blue_value = retrieve_rgb(calculate_temperature(row))
 
                             #store unique source indentifiers and designations of star(row)
                             solution_id_value = int(row['solution_id'])
@@ -82,8 +82,8 @@ def main():
                             print("data in row " + str(i) + " successfully added")
 
                         #print to console if an exception occured for the star
-                        except Exception as row_exception:
-                            print("Exception occured in row " + str(i) + " in file " + gaia_file + ": ", row_exception)
+                        except Exception as RowError:
+                            print("Exception occured in row " + str(i) + " in file " + gaia_file + ": ", RowError)
                             traceback.print_exc()
                             print("\n")
                             #pass
@@ -106,14 +106,14 @@ def main():
                 print(gaia_file + " was successfully converted")
 
             #print to console if an exception occured for the GaiaSource file
-            except Exception as file_exception:
-                print(gaia_file + ": ", file_exception)
+            except Exception as FileError:
+                print(gaia_file + ": ", FileError)
                 traceback.print_exc()
 
 #calculate x, y, z coordinates of the star using parallax, galactic longitude and latitude
 #more information on the formulas can be found here:
 #https://en.wikipedia.org/wiki/Galactic_coordinate_system
-def calculateCartesian(row):
+def calculate_cartesian(row):
     if row['parallax'] == '':
         raise Exception("no parallax")
     else:
@@ -126,7 +126,7 @@ def calculateCartesian(row):
 #calculate peak wavelength of light emitted from the star then calculate temperature of the star with Wien's law formula 
 #using displacement constant and peak wavelength
 #https://www.omnicalculator.com/physics/wiens-law
-def calculateTemperature(row):
+def calculate_temperature(row):
     if not row['nu_eff_used_in_astrometry'] == '':
         peak_wavelength_value = 1 / float(row['nu_eff_used_in_astrometry']) * 1000
     elif not row['pseudocolour'] == '':
@@ -140,30 +140,30 @@ def calculateTemperature(row):
 
 #calculate rgb values of star using temperature
 #https://en.wikipedia.org/wiki/CIE_1931_color_space
-def calculateRGB(t):
+def calculate_rgb(t):
     if 0 <= t <= 15000:
 
         #calculate red value
         if t <= 5705:
             red_value = 255
         elif 5705 < t:
-            red_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[0])
+            red_value = calculate_polynomial(t, POLYNOMIAL_COEFFICIENTS[0])
 
         #calcluate green value
         if t <= 665:
             green_value = 0
         elif 665 < t <= 5705:
-            green_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[1])
+            green_value = calculate_polynomial(t, POLYNOMIAL_COEFFICIENTS[1])
         elif 5705 < t <= 6145:
             green_value = 255
         elif 6145 < t:
-            green_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[2])
+            green_value = calculate_polynomial(t, POLYNOMIAL_COEFFICIENTS[2])
 
         #calculate blue value
         if t <= 1395:
             blue_value = 0
         elif 1395 < t <= 6145:
-            blue_value = calculatePolynomial(t, POLYNOMIAL_COEFFICIENTS[3])
+            blue_value = calculate_polynomial(t, POLYNOMIAL_COEFFICIENTS[3])
         elif 6145 < t:
             blue_value = 255
 
@@ -182,8 +182,8 @@ def calculateRGB(t):
     
     return rgb_value
 
-#calculate a polynomial using variable t
-def calculatePolynomial(t, coefficients):
+#calculate a polynomial using variable t where the polynomiasl coefficents are represented by coeffcients in ascending order
+def calculate_polynomial(t, coefficients):
     colour_value = 0
     for i, coefficient in enumerate(coefficients):
         colour_value += coefficient * t ** i
@@ -192,12 +192,12 @@ def calculatePolynomial(t, coefficients):
 
 #retrive rgb values of star using temperature
 #https://en.wikipedia.org/wiki/CIE_1931_color_space
-def retrieveRGB(t):
+def retrieve_rgb(t):
 
     #round temperature to the nearest 100
     t = round(t / 100) * 100
 
-    RGB = {
+    rgb = {
         0 : [255.0, 0.0, 0.0],
         100 : [255.0, 0.0, 0.0],
         200 : [255.0, 0.0, 0.0],
@@ -351,7 +351,7 @@ def retrieveRGB(t):
         15000 : [186.27454592079093, 203.88027613336965, 255.0]
     }
   
-    return RGB.get(t)
+    return rgb.get(t)
 
 if __name__ == '__main__':
     main()

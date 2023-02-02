@@ -1,5 +1,4 @@
 import numpy
-import numpy.polynomial
 import timeline
 import matplotlib
 import csv
@@ -32,8 +31,9 @@ blue_middle_polynomial = numpy.polynomial.Polynomial.fit(temperature_values[279:
    
 print(red_high_polynomial, green_lower_polynomial, green_higher_polynomial, blue_middle_polynomial)
 
-def polynomialBestFit(x, y, degree):
-    #produce a matrix of values where each row corresponds to an x value in the data and each column corresponds to a coefficient in the final formula (the total number of columns is degree + 1)
+#produce a matrix of values where each row corresponds to an x value in the data and each column corresponds to a 
+#coefficient in the final formula (the total number of columns is degree + 1)
+def polynomial_best_fit(x, y, degree):
     matrix = []
     for x_value in x:
         row = []

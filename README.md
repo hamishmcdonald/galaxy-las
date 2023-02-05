@@ -1,14 +1,14 @@
-#Python script to build a 3D model of the milky way galaxy, plotting and colourising 1.7 billion stars with data collected from the Gaia space observatory
+Python script to build a 3D model of the milky way galaxy, plotting and colourising 1.7 billion stars with data collected from the Gaia space observatory
 
-Download the las files for the model here: 
+Download the las files for the model here: https://1drv.ms/u/s!Ao4LPyZvSCz6g40MCuX5-vSQIzf73g?e=pCuNQH
 
-You can view the las model using: 
+You can view the las model using: https://www.qgis.org/en/site/
 
 In my evenings, after I'm finished work and studying, I often work on personal coding projects. At the moment I've been working on an older project of mine - building an accurate 3D model of the milky way galaxy. 
 
 This project will eventually become the centrepiece of my portfolio website which I am in the process of building. So if you are looking for tech talent or know someone who is please reach out. I'm interested in a junior software development position or a paid intership. 
 
-You can find me on LinkedIn here:
+You can find me on LinkedIn here: https://www.linkedin.com/in/hamish-mcdonald-905913228/
 
 If you get a chance to look into the code you may notice some of the functions aren't being used. This is because I'm still working on the function to colourise the stars more accurately and adjust the absolute luminosity of the stars to more closely represent how the milky way looks to an observer. 
 
